@@ -1,41 +1,36 @@
-const puppeteer = require('puppeteer');
+const express = require('express')
+const app = express()
+const port = process.env.PORT || 3000
+const router = require('./route/index')
+const cors = require('cors')
+const bodyParser = require('body-parser')
 
-const path = require('./utils/path');
+app.use(cors())
 
+app.use(bodyParser.json())
+app.use(bodyParser.urlencoded({extended:true}))
 
-(async () => {
-    const browser = await puppeteer.launch({
-    headless: false,
-    defaultViewport: null
-    });
-    const page = await browser.newPage();
-    // get detail anime
-    await page.goto(`https://194.163.183.129/${path.anime}/one-piece/`);
-
-    // judul anime
-    const titleAnime = await page.$eval('div[class="infox"] h1', el => el.textContent);
-    const descAnime = await page.$eval('div[class="infox"] .desc', el => el.textContent);
-    const genreAnime = await page.evaluate(() => Array.from(document.querySelectorAll('div[class="infox"] .genre-info a'), element => element.textContent));
-    const detailAnime = await page.evaluate(() => Array.from(document.querySelectorAll('div[class="infox"] .spe span'), element => element.textContent));
-    const listEpisode = await page.evaluate( async () => {
-        const data = document.querySelectorAll('div[class="mCSB_container"] li');
-            let manis = [];
-            for (i=0; i< data.length; i++) {
-                const date = document.querySelectorAll('div[class="mCSB_container"] li .epsleft .date')[i].innerText;
-                const title = document.querySelectorAll('div[class="mCSB_container"] li .epsleft a')[i].innerText;
-                const link = document.querySelectorAll('div[class="mCSB_container"] li .epsleft a')[i].href;
-                manis.push({date, title, link})
-             }
-             return manis;    
-    });
-    
-    console.log({
-        titleAnime,
-        descAnime,
-        genreAnime,
-        detailAnime,
-        listEpisode
+app.use('/api',router)
+app.use('/',(req,res)=>{
+    res.send({
+        message : 'Samehadaku Rest Api',
+        createdBy : 'Farhandz ♥️'
     })
-    // await page.screenshot({ path: 'example.png' });
-    await browser.close();
-  })();
+})
+app.use('/api',(req,res) =>{
+    res.send({
+        message:'check our github for more info',
+        github :'https://github.com/farhandz'
+    })
+})
+
+
+app.use('*',(req,res) =>{
+    res.json({
+        'status':'not found path',
+        message: 'read the docs here https://github.com/farhandz'
+    })
+})
+app.listen(port, () => {
+    console.log('listening on port', port)
+})
