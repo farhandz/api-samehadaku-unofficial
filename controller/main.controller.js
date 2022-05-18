@@ -4,14 +4,20 @@ const puppeteer = require('puppeteer')
 module.exports = {
     getDetailAnime: async (req, res) => {
         try {
+            // const {data} = req.params.query
+            const url_anime = req.params.url_anime;
             const browser = await puppeteer.launch({
-                headless: true,
+                headless: false,
                 defaultViewport: null
                 });
                 const page = await browser.newPage();
                 // get detail anime
-                await page.goto(`${path.baseUrl}/${path.anime}/one-piece/`);
-            
+                await page.goto(`${path.baseUrl}/${path.anime}/${url_anime}/`);
+                const element = await page.$('div[class="infox"]');
+                if (!element) {
+                  await browser.close();
+                  throw new Error('Not Found');
+                }
                 // judul anime
                 const titleAnime = await page.$eval('div[class="infox"] h1', el => el.textContent);
                 const descAnime = await page.$eval('div[class="infox"] .desc', el => el.textContent);
@@ -39,9 +45,17 @@ module.exports = {
                 listEpisode
             });
         } catch (error) {
-            res.send({
+            res.status(500).send({
                 message: error.message
-            }).status(500)
+            })
+        }
+    },
+
+    getBatch : async () => {
+        try {
+            const titleAnime = await page.$eval('div[class="animposx"] .title', el => el.textContent);
+        } catch (error) {
+            
         }
     }
 }
