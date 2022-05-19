@@ -1,5 +1,6 @@
 const path = require('../utils/path');
 const puppeteer = require('puppeteer')
+const {cekk}  = require('../utils/help')
 
 module.exports = {
     getDetailAnime: async (req, res) => {
@@ -25,14 +26,14 @@ module.exports = {
                 const detailAnime = await page.evaluate(() => Array.from(document.querySelectorAll('div[class="infox"] .spe span'), element => element.textContent));
                 const listEpisode = await page.evaluate( async () => {
                     const data = document.querySelectorAll('div[class="mCSB_container"] li');
-                        let manis = [];
-                        for (i=0; i< data.length; i++) {
-                            const date = document.querySelectorAll('div[class="mCSB_container"] li .epsleft .date')[i].innerText;
-                            const title = document.querySelectorAll('div[class="mCSB_container"] li .epsleft a')[i].innerText;
-                            const link = document.querySelectorAll('div[class="mCSB_container"] li .epsleft a')[i].href;
-                            manis.push({date, title, link})
-                         }
-                         return manis;    
+                    let manis = [];
+                    for (i=0; i< data.length; i++) {
+                        const date = document.querySelectorAll('div[class="mCSB_container"] li .epsleft .date')[i].innerText;
+                        const title = document.querySelectorAll('div[class="mCSB_container"] li .epsleft a')[i].innerText;
+                        const link = document.querySelectorAll('div[class="mCSB_container"] li .epsleft a')[i].href;
+                        manis.push({date, title, link})
+                    }
+                        return manis;    
                 });
                 
                 // await page.screenshot({ path: 'example.png' });
@@ -51,11 +52,31 @@ module.exports = {
         }
     },
 
-    getBatch : async () => {
+    getBatch : async (req, res) => {
         try {
-            const titleAnime = await page.$eval('div[class="animposx"] .title', el => el.textContent);
+            const {paging} = !req.query ? null : req.query;
+            const page = await cekk().then((data) => data.newPage());
+            await page.goto(`${path.baseUrl}/${path.batch}/page/${paging}`);
+            const result = await page.evaluate( async() => {
+                const data = document.querySelectorAll('div[class="animposx"]');
+                if(!data) {
+                    await page.close()
+                    throw new Error("data not found")
+                }
+                let manis = [];
+                for (i=0; i< data.length; i++) {
+                    const img = document.querySelectorAll('div[class="animposx"] img')[i].src;
+                    const title = document.querySelectorAll('div[class="animposx"] .title')[i].innerText;
+                    const score = document.querySelectorAll('div[class="animposx"] .score')[i].innerText;
+                    const status = document.querySelectorAll('div[class="animposx"] .type')[i].innerText;
+                    manis.push({img, score, title, status})
+                }
+                return manis;
+            })
+
+            res.send(result);
         } catch (error) {
-            
+            console.log(error.message)
         }
     }
 }
