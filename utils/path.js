@@ -7,5 +7,4 @@ module.exports = {
     batch: "daftar-batch",
     anime : "anime",
     genre : "genre"
-    
 }
