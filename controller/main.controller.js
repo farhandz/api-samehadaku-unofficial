@@ -113,5 +113,56 @@ module.exports = {
       }
         
     },
+
+    getAllListAnime : async (req, res) => {
+        try {
+            const listfilter = [
+                '0-9', 'A', 'B', 'C', 'D',
+                'E',   'F', 'G', 'H', 'I',
+                'J',   'K', 'L', 'M', 'N',
+                'O',   'P', 'Q', 'R', 'S',
+                'T',   'U', 'V', 'W', 'X',
+                'Y',   'Z'
+            ];
+            const browser = await puppeteer.launch({
+                headless: false,
+                defaultViewport: null
+            });
+            const page = await browser.newPage();
+            let count = 0;
+            let dts = []
+            var timer = setInterval( async() => {
+                count += 1;
+                console.log(`******* ******** ******* berjalan selama ${count} ******* ******* ***********`)
+                await page.goto(`${path.baseUrl}/a-z/?letter=${listfilter[count]}`);
+                let result = await page.evaluate(() => {
+                    let datas = [];
+                    const dataPage = document.querySelectorAll('.item')
+                    for (let i = 0; i < dataPage.length; i++) {
+                        const title = document.querySelectorAll('.item .entry-title')[i].innerText;
+                        const img = document.querySelectorAll('.item img')[i].innerText;
+                        const description = document.querySelectorAll('.item p')[i].innerText;
+                        const download = document.querySelectorAll('.item a')[0].href;
+                        datas.push({title, img , description , download})                  
+                    }
+                    return datas;
+                })
+                dts.push(...result);
+                console.log(dts)
+                if(count == listfilter.length) {
+                    clearInterval(timer)
+                    await browser.close()
+                    res.send({
+                        message : "sukses",
+                        total: dts.length,
+                        data : dts,
+                    })
+
+                }
+            }, 7000)
+        } catch (error) {
+            res.status(500).send(error.message)
+        }
+    }
     
 }
