@@ -2,6 +2,7 @@ const path = require('../utils/path');
 const puppeteer = require('puppeteer')
 const {cekk}  = require('../utils/help');
 const res = require('express/lib/response');
+const fs = require('fs');
 
 module.exports = {
     getDetailAnime: async (req, res) => {
@@ -152,6 +153,13 @@ module.exports = {
                 if(count == listfilter.length) {
                     clearInterval(timer)
                     await browser.close()
+                    fs.writeFile("list-anime.json", JSON.stringify(dts), 'utf8', function (err) {
+                        if (err) {
+                            console.log("An error occured while writing JSON Object to File.");
+                            return console.log(err);
+                        }
+                        console.log("JSON file has been saved.");
+                    });
                     res.send({
                         message : "sukses",
                         total: dts.length,
@@ -159,10 +167,31 @@ module.exports = {
                     })
 
                 }
-            }, 7000)
+            }, 8000)
+        } catch (error) {
+            res.status(500).send(error.message)
+        }
+    },
+    downloadAllAnime: async () => {
+        try {
+            const page = await cekk().then((data) => data.newPage());
+            await page.goto(`${path.baseUrl}/adachi-to-shimamura-episode-12`);
+            const result = await page.evaluate( async() => {
+                const datas = [];
+                const data = document.querySelectorAll('.download-eps');
+                for (let index = 0; index < data.length; index++) {
+                    const type = document.querySelectorAll('.download-eps p')[index].innerText;
+                    const qualitys = document.querySelectorAll('.download-eps p')[index].querySelectorAll('.download-eps ul li');
+                    for (let index = 0; index < qualitys.length; index++) {
+                        datas.push({qualitys});
+                    }
+                    datas.push({type})
+                }
+                return datas
+            });
+            console.log(result);
         } catch (error) {
             res.status(500).send(error.message)
         }
     }
-    
 }
