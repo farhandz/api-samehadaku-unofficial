@@ -176,19 +176,29 @@ module.exports = {
             const page = await cekk().then((data) => data.newPage());
             await page.goto(`${path.baseUrl}/adachi-to-shimamura-episode-12`);
             const result = await page.evaluate( async() => {
-                const datas = [];
+            let datas = [];
                 const data = document.querySelectorAll('.download-eps');
                 for (let index = 0; index < data.length; index++) {
+                     let datas2 = [];
                     const type = document.querySelectorAll('.download-eps p')[index].innerText;
-                    const qualitys = document.querySelectorAll('.download-eps p')[index].querySelectorAll('.download-eps ul li');
-                    for (let index = 0; index < qualitys.length; index++) {
-                        datas.push({qualitys});
+                    const qualitys = document.querySelectorAll('.download-eps')[index].querySelectorAll('ul li');
+                    for (let index2 = 0; index2 < document.querySelectorAll('.download-eps')[index].querySelectorAll('ul li').length; index2++) {
+                        const quality = document.querySelectorAll('.download-eps')[index].querySelectorAll('ul li a')[index2].href;
+                         datas2.push({quality})
                     }
-                    datas.push({type})
+                    datas.push(datas2)
                 }
+                
                 return datas
+
+                
             });
-            console.log(result);
+
+            const filter = result.reduce((result, item) => {
+                return item;
+            }, {})
+
+            console.log(filter);
         } catch (error) {
             res.status(500).send(error.message)
         }
