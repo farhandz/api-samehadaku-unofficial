@@ -181,24 +181,31 @@ module.exports = {
                 for (let index = 0; index < data.length; index++) {
                      let datas2 = [];
                     const type = document.querySelectorAll('.download-eps p')[index].innerText;
-                    const qualitys = document.querySelectorAll('.download-eps')[index].querySelectorAll('ul li');
                     for (let index2 = 0; index2 < document.querySelectorAll('.download-eps')[index].querySelectorAll('ul li').length; index2++) {
                         const quality = document.querySelectorAll('.download-eps')[index].querySelectorAll('ul li a')[index2].href;
-                         datas2.push({quality})
+                         datas2.push({quality , type})
                     }
                     datas.push(datas2)
                 }
                 
                 return datas
-
-                
             });
-
-            const filter = result.reduce((result, item) => {
-                return item;
-            }, {})
-
-            console.log(filter);
+            
+            const dataResult = result.reduce((arr, e) => {
+                return arr.concat(e)
+            }, [])
+            
+            let group_to_values = dataResult.reduce(function (obj, item) {
+                obj[item.type] = obj[item.type] || [];
+                obj[item.type].push(item.quality);
+                return obj;
+            }, {});
+            
+            let groups = Object.keys(group_to_values).map(function (key) {
+                return {type: key, source: group_to_values[key]};
+            });
+              
+            res.send(groups);
         } catch (error) {
             res.status(500).send(error.message)
         }
