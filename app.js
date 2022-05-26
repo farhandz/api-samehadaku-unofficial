@@ -4,11 +4,22 @@ const port = process.env.PORT || 3000
 const router = require('./route/index')
 const cors = require('cors')
 const bodyParser = require('body-parser')
+const mongoose = require("mongoose")
 
 app.use(cors())
 
 app.use(bodyParser.json())
 app.use(bodyParser.urlencoded({extended:true}))
+
+mongoose.connect('mongodb://localhost/anime', { 
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+  
+}).then(() => {
+    console.log('connected to mongodb')
+}).catch(err => {
+    console.log('error connect mongo db', err)
+});
 
 app.use('/api',router)
 app.use('/',(req,res)=>{

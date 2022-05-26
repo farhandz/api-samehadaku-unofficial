@@ -1,6 +1,6 @@
 const path = require('../utils/path');
 const puppeteer = require('puppeteer')
-const {cekk}  = require('../utils/help');
+const {cekk, responseSukses, responseError}  = require('../utils/help');
 const fs = require('fs');
 
 module.exports = {
@@ -9,8 +9,12 @@ module.exports = {
             // const {data} = req.params.query
             const url_anime = req.params.url_anime;
             const browser = await puppeteer.launch({
-                headless: false,
-                defaultViewport: null
+                headless: true,
+                defaultViewport: null,
+                args: [
+                    '--no-sandbox',
+                    '--disable-setuid-sandbox',
+                  ],
                 });
                 const page = await browser.newPage();
                 // get detail anime
@@ -34,13 +38,15 @@ module.exports = {
                         const link = document.querySelectorAll('div[class="mCSB_container"] li .epsleft a')[i].href;
                         manis.push({date, title, link})
                     }
-                        return manis;    
+                        return manis;       
                 });
+                
+                const titles = titleAnime.split(' ').filter(e => e != 'Nonton' && e !== 'Subtitle' && e !== 'Indonesia').join(' ');
                 
                 // await page.screenshot({ path: 'example.png' });
                 await browser.close();
             res.json({
-                titleAnime,
+                titles,
                 descAnime,
                 genreAnime,
                 detailAnime,
@@ -125,6 +131,10 @@ module.exports = {
                 'Y',   'Z'
             ];
             const browser = await puppeteer.launch({
+                args: [
+                    '--no-sandbox',
+                    '--disable-setuid-sandbox',
+                  ],
                 headless: false,
                 defaultViewport: null
             });
@@ -173,8 +183,10 @@ module.exports = {
     },
     downloadAllAnime: async (req ,res) => {
         try {
+            const nameAnime = req.query.anime;
+            console.log(nameAnime);
             const page = await cekk().then((data) => data.newPage());
-            await page.goto(`${path.baseUrl}/adachi-to-shimamura-episode-12`);
+            await page.goto(`${path.baseUrl}/${nameAnime}`);
             const result = await page.evaluate( async() => {
             let datas = [];
                 const data = document.querySelectorAll('.download-eps');
@@ -191,10 +203,12 @@ module.exports = {
                 return datas
             });
             
+            // convert array of array to single array
             const dataResult = result.reduce((arr, e) => {
                 return arr.concat(e)
             }, [])
             
+            // group base on source and type download
             let group_to_values = dataResult.reduce(function (obj, item) {
                 obj[item.type] = obj[item.type] || [];
                 obj[item.type].push(item.quality);
@@ -205,9 +219,9 @@ module.exports = {
                 return {type: key, source: group_to_values[key]};
             });
               
-            res.send(groups);
+            responseSukses(res, groups, "Sukses Scrape group")
         } catch (error) {
-            res.status(500).send(error.message)
+            responseError(res, 500 ,error.message);
         }
     }
 }

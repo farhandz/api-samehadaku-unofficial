@@ -1,14 +1,32 @@
 const puppeteer = require('puppeteer')
 const cekk = async () => {
     const browser = await puppeteer.launch({
-        headless: false,
+        args: [
+            '--no-sandbox',
+            '--disable-setuid-sandbox',
+          ],
+        headless: true,
         defaultViewport: null
         });
         // get detail anime
         return browser;
 }
 
+const responseSukses = (res, data ,  message = 'Sukses') => {
+    res.send({
+        message: message,
+        data: data
+    });
+};
+
+const responseError = (res , status = 500 , message = 'Error') => {
+    res.status(status).send({
+        message: message,
+    })
+}
 
 module.exports = {
-    cekk
+    cekk,
+    responseError,
+    responseSukses
 }
