@@ -8,4 +8,5 @@ router.get('/batch', MainController.getBatch);
 router.get('/new/episode', MainController.getNewEpisode);
 router.get('/all', MainController.getAllListAnime);
 router.get('/download', mainController.downloadAllAnime);
+router.get('/download/racaty', mainController.directDownloadRacaty);
 module.exports = router

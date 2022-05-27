@@ -243,5 +243,26 @@ module.exports = {
         } catch (error) {
             responseError(res, 500 ,error.message);
         }
+    },
+
+    directDownloadRacaty: async(req, res) => {
+        try {
+            const link = req.query.link;
+            const browser = await puppeteer.launch({
+                headless: false,
+                defaultViewport: null,
+                args: [
+                    '--no-sandbox',
+                    '--disable-setuid-sandbox',
+                  ],
+                });
+                const page = await browser.newPage();
+                await page.goto(link);
+                await page.click('#downloadbtn').click();
+                await browser.close();
+                responseSukses(res, [], "Sukses Scrape group")
+        } catch (error) {
+            responseError(res, 500 ,error.message);
+        }
     }
 }
