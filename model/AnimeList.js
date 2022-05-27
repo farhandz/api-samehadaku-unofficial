@@ -15,4 +15,4 @@ const anime_list = new mongoose.Schema({
     },
 })
 
-module.exports = mongoose.model('anime_list', anime_list)
+module.exports = mongoose.model('AnimeList', anime_list)

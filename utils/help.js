@@ -5,7 +5,7 @@ const cekk = async () => {
             '--no-sandbox',
             '--disable-setuid-sandbox',
           ],
-        headless: true,
+        headless: false,
         defaultViewport: null
         });
         // get detail anime

@@ -2,14 +2,20 @@ const path = require('../utils/path');
 const puppeteer = require('puppeteer')
 const {cekk, responseSukses, responseError}  = require('../utils/help');
 const fs = require('fs');
+const DetailAnime = require('../model/DetailAnime');
+const DownloadAnime = require('../model/DownloadAnime');
 
 module.exports = {
     getDetailAnime: async (req, res) => {
         try {
             // const {data} = req.params.query
             const url_anime = req.params.url_anime;
+            const isAnimeExisst = await DetailAnime.findOne({titles: url_anime});
+            if(isAnimeExisst) {
+                return responseSukses(res, isAnimeExisst, "Sukses Get Detail Anime")
+            }
             const browser = await puppeteer.launch({
-                headless: true,
+                headless: false,
                 defaultViewport: null,
                 args: [
                     '--no-sandbox',
@@ -18,7 +24,8 @@ module.exports = {
                 });
                 const page = await browser.newPage();
                 // get detail anime
-                await page.goto(`${path.baseUrl}/${path.anime}/${url_anime}/`);
+                console.log(path.baseUrl)
+                await page.goto(`https://194.163.183.129/${path.anime}/${url_anime}/`);
                 const element = await page.$('div[class="infox"]');
                 if (!element) {
                   await browser.close();
@@ -42,16 +49,12 @@ module.exports = {
                 });
                 
                 const titles = titleAnime.split(' ').filter(e => e != 'Nonton' && e !== 'Subtitle' && e !== 'Indonesia').join(' ');
-                
+
+                await DetailAnime.create({titles, descAnime, genreAnime, detailAnime, listEpisode})
                 // await page.screenshot({ path: 'example.png' });
                 await browser.close();
-            res.json({
-                titles,
-                descAnime,
-                genreAnime,
-                detailAnime,
-                listEpisode
-            });
+            
+            responseSukses(res, {titles, descAnime, genreAnime, detailAnime, listEpisode})
         } catch (error) {
             res.status(500).send({
                 message: error.message
@@ -184,9 +187,17 @@ module.exports = {
     downloadAllAnime: async (req ,res) => {
         try {
             const nameAnime = req.query.anime;
-            console.log(nameAnime);
+            const isAnimeExisst = await DownloadAnime.findOne({title: nameAnime});
+            if(isAnimeExisst) {
+                return responseSukses(res, isAnimeExisst);
+            }
             const page = await cekk().then((data) => data.newPage());
             await page.goto(`${path.baseUrl}/${nameAnime}`);
+            const title = await page.$eval('h1[class="entry-title"]', el => el.textContent);
+            if(!title) {
+                await browser.close();
+                throw new Error('Not Found');
+            }
             const result = await page.evaluate( async() => {
             let datas = [];
                 const data = document.querySelectorAll('.download-eps');
@@ -218,8 +229,17 @@ module.exports = {
             let groups = Object.keys(group_to_values).map(function (key) {
                 return {type: key, source: group_to_values[key]};
             });
+            
+            const response = {
+                title,
+                data: groups
+            }
+
+            await page.close()
+            
+            await DownloadAnime.create({title: nameAnime, data: response})
               
-            responseSukses(res, groups, "Sukses Scrape group")
+            responseSukses(res, response, "Sukses Scrape group")
         } catch (error) {
             responseError(res, 500 ,error.message);
         }

@@ -14,7 +14,6 @@ app.use(bodyParser.urlencoded({extended:true}))
 mongoose.connect('mongodb://localhost/anime', { 
   useNewUrlParser: true,
   useUnifiedTopology: true,
-  
 }).then(() => {
     console.log('connected to mongodb')
 }).catch(err => {
