@@ -114,9 +114,9 @@ module.exports = {
             }
             return datas;
         });
-        console.log("sini sini")
         console.log(result);
         res.send(result);
+        responseSukses(res, result, "Sukses Get All Anime")
       } catch (error) {
          res.status(500).send(error)
       }

@@ -5,6 +5,16 @@ const router = require('./route/index')
 const cors = require('cors')
 const bodyParser = require('body-parser')
 const mongoose = require("mongoose")
+const cron = require('node-cron');
+const {newAnime}  = require('./utils/help');
+
+
+cron.schedule('*/1 * * * *', () => {
+    console.log('********* Schedule Run Every 1 minute');
+    newAnime()
+});
+
+
 
 app.use(cors())
 
