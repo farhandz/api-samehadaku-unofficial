@@ -6,12 +6,16 @@ const cors = require('cors')
 const bodyParser = require('body-parser')
 const mongoose = require("mongoose")
 const cron = require('node-cron');
-const {newAnime}  = require('./utils/help');
+const {newAnime , getListAnimeEveryWeek}  = require('./utils/help');
 
 
-cron.schedule('*/1 * * * *', () => {
-    console.log('********* Schedule Run Every 1 minute');
+cron.schedule('0 0 0 * * *', () => {
+    console.log('********* Schedule Run every Midnight');
     newAnime()
+});
+cron.schedule('5 8 * * 0', () => {
+    console.log('********* Schedule Run every week');
+    getListAnimeEveryWeek()
 });
 
 

@@ -4,6 +4,7 @@ const {cekk, responseSukses, responseError}  = require('../utils/help');
 const fs = require('fs');
 const DetailAnime = require('../model/DetailAnime');
 const DownloadAnime = require('../model/DownloadAnime');
+const AnimeList = require('../model/AnimeList');
 
 module.exports = {
     getDetailAnime: async (req, res) => {
@@ -153,7 +154,7 @@ module.exports = {
                     const dataPage = document.querySelectorAll('.item')
                     for (let i = 0; i < dataPage.length; i++) {
                         const title = document.querySelectorAll('.item .entry-title')[i].innerText;
-                        const img = document.querySelectorAll('.item img')[i].innerText;
+                        const img = document.querySelectorAll('.item img')[i].src;
                         const description = document.querySelectorAll('.item p')[i].innerText;
                         const download = document.querySelectorAll('.item a')[0].href;
                         datas.push({title, img , description , download})                  
@@ -161,7 +162,7 @@ module.exports = {
                     return datas;
                 })
                 dts.push(...result);
-                console.log(dts)
+                console.log(...dts)
                 if(count == listfilter.length) {
                     clearInterval(timer)
                     await browser.close()
@@ -172,6 +173,7 @@ module.exports = {
                         }
                         console.log("JSON file has been saved.");
                     });
+                    await AnimeList.insertMany(dts)
                     res.send({
                         message : "sukses",
                         total: dts.length,
