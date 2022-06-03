@@ -15,7 +15,7 @@ module.exports = {
                 return responseSukses(res, isAnimeExisst, "Sukses Get Detail Anime")
             }
             const browser = await puppeteer.launch({
-                headless: false,
+                headless: true,
                 defaultViewport: null,
                 args: [
                     '--no-sandbox',
@@ -138,7 +138,7 @@ module.exports = {
                     '--no-sandbox',
                     '--disable-setuid-sandbox',
                   ],
-                headless: false,
+                headless: true,
                 defaultViewport: null
             });
             const page = await browser.newPage();
@@ -249,7 +249,7 @@ module.exports = {
         try {
             const link = req.query.link;
             const browser = await puppeteer.launch({
-                headless: false,
+                headless: true,
                 defaultViewport: null,
                 args: [
                     '--no-sandbox',
