@@ -5,6 +5,7 @@ const fs = require('fs');
 const DetailAnime = require('../model/DetailAnime');
 const DownloadAnime = require('../model/DownloadAnime');
 const AnimeList = require('../model/AnimeList');
+const NewAnime = require('../model/NewAnime');
 
 module.exports = {
     getDetailAnime: async (req, res) => {
@@ -93,33 +94,11 @@ module.exports = {
 
     getNewEpisode: async (req, res) => {
       try {
-        const paging= !req.query.paging ? 1 : req.query.paging;
-        const page = await cekk().then((data) => data.newPage());
-        await page.goto(`${path.baseUrl}/page/${paging}`);
-        console.log("masuk sini");
-        const result = await page.evaluate( async() => {
-            console.log("evaluate")
-            const data = document.querySelectorAll('.post-show')[0].querySelectorAll('li');
-            console.log(data)
-            if(!data) {
-                await page.close()
-                throw new Error("data not found")
-            }
-            let datas = [];
-            for (i=0; i< data.length; i++) {
-                const img = document.querySelectorAll('.post-show')[0].querySelectorAll('li .thumb img')[i].src;
-                const title = document.querySelectorAll('.post-show')[0].querySelectorAll('li .dtla .entry-title')[i].innerText;;
-                const episode = document.querySelectorAll('.post-show')[0].querySelectorAll('li .dtla')[i].childNodes[2].innerText;
-                const rilis =  document.querySelectorAll('.post-show')[0].querySelectorAll('li .dtla')[i].childNodes[6].innerText;
-                datas.push({img, title, episode, rilis})
-            }
-            return datas;
-        });
-        console.log(result);
-        res.send(result);
-        responseSukses(res, result, "Sukses Get All Anime")
+          const newAnime = await NewAnime.findOne().sort({_id: -1}).limit(1)
+          console.log("hahahah")
+        responseSukses(res , newAnime, "Sukses Get All Anime")
       } catch (error) {
-         res.status(500).send(error)
+         res.status(500).send(error.message)
       }
         
     },
