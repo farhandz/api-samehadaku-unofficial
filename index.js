@@ -1,47 +1,111 @@
 const puppeteer = require('puppeteer');
 
-async function hasNextPage(page) {
-    const element = await page.$('button[aria-label="Halaman berikutnya"]');
-    if (!element) {
-      throw new Error('not found');
-    }
+const maxjarak = 10;
+
+async function hasNextPage(page ,ads) {
+    
+    const hasScroll = await page.$('span[class="HlvSq"]');
+
+    return !hasScroll;
   
-    const disabled = await page.evaluate((el) => el.getAttribute('disabled'), element);
-    if (disabled) {
-      console.log('The next page button is disabled');
-    }
-  
-    return !disabled;
+    // return !disabled;
   }
 
  
 async function goToNextPage(page) {
-    await page.click('button[aria-label="Halaman berikutnya"]')
+    // await page.click('button[aria-label="Halaman berikutnya"]')
     await page.waitForNetworkIdle();
   }
-
 
   async function parsePlaces(page) {
     let places = [];
   
-    const elements = await page.$$('.fontHeadlineSmall span');
+    const elements = await page.$$('div[class="Nv2PK THOPZb CpccDe "]');
+    // const elements = await page.$$('div[class="lI9IFe "]');
     if (elements && elements.length) {
       for (const el of elements) {
+
+        const image = await el.$('div[class="lI9IFe "] div[class="SpFAAb"] img');
+        let address = await el.$('div[class="lI9IFe "] div[class="UaQhfb fontBodyMedium"] div[class="W4Efsd"] div[class="W4Efsd"] ');
+        let phone = await el.$('div[class="lI9IFe "] div[class="UaQhfb fontBodyMedium"] div[class="W4Efsd"] div[class="W4Efsd"] div[class="W4Efsd"] ');
+        let url = await el.$('a[class="hfpxzc"]');
+        // let url = await el.$('div[class="lI9IFe "] div[class="UaQhfb fontBodyMedium"] div[class="W4Efsd"] div[class="W4Efsd"] div[class="W4Efsd"] ');
+        let src = '';
+        if(image) {
+          src  = await image.evaluate(dt => dt.src)
+        }
+
+        if(address) {
+          address = await address.evaluate(dt => dt.textContent)
+        }
+
+        if(phone) {
+          phone = await address.evaluate(dt => dt.textContent)
+        }
+
+        // address = await address.evaluate(dt => dt.textContent)
         const name = await el.evaluate(span => span.textContent);
-        places.push({ name });
+
+        
+        url = await url.evaluate(span => span.getAttribute('href'))
+        const latitude = getLongLat(url).split(',')[0]
+        const longitude = getLongLat(url).split(',')[1]
+        places.push({ name, image: src,  address, longlat: getLongLat(url), distance: Math.round(distance(latitude, longitude, '-6.2194013' , '106.8138542,17'))});
       }
     }
-    const element2 = await page.$$('div[class="xwpmRb qisNDe"] img');
-    if (element2 && element2.length) {
-      for (const el of element2) {
-        const img = await el.evaluate(img => img.src);
-        places.map((dt) => ({...dt, image: "asaxasxas"}));
-      }
-    }
-  
     return places;
   }
 
+  const getLongLat = (url) => {
+  const matches = url.match(/!3d(-?\d+\.\d+)!4d(-?\d+\.\d+)/);
+
+  if (matches && matches.length >= 3) {
+    const latitude = parseFloat(matches[1]);
+    const longitude = parseFloat(matches[2]);
+    
+     return `${latitude},${longitude}`;
+  } else {
+    console.log("Latitude and longitude not found in the URL.");
+  }
+  
+  }
+
+  function  distance(lat1, lon1, latKantor, longitudeKantor) {
+    const earthRadius = 6371;
+  
+    const lat1Rad = (parseFloat(lat1) * Math.PI) / 180;
+    const lon1Rad = (parseFloat(lon1) * Math.PI) / 180;
+    const lat2Rad = (parseFloat(latKantor) * Math.PI) / 180;
+    const lon2Rad = (parseFloat(longitudeKantor) * Math.PI) / 180;
+  
+    
+    const latDiff = lat2Rad - lat1Rad;
+    const lonDiff = lon2Rad - lon1Rad;
+  
+    const a = Math.sin(latDiff / 2) ** 2 + Math.cos(lat1Rad) * Math.cos(lat2Rad) * Math.sin(lonDiff / 2) ** 2;
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  
+    // Calculate the distance
+    const distance = earthRadius * c;
+  
+    return Math.round(distance); // Distance in kilometers
+  }
+
+
+const distanceMax = (data) => {
+
+  const hasDistanceGreaterThan5 = data.some(item => item.distance >= maxjarak);
+
+  if (hasDistanceGreaterThan5) {
+    return false
+  } else {
+
+    return true
+  }
+}
+
+  
+  
 
 (async () => {
     const browser = await puppeteer.launch({
@@ -51,7 +115,7 @@ async function goToNextPage(page) {
     let ads = [];
     const page = await browser.newPage();
     // await page.setViewport(VIEWPORT);
-    await page.goto('https://www.google.com/maps/search/warteg/@-6.2519614,106.8400639,13z');
+    await page.goto('https://www.google.com/maps/search/mixue/@-6.2194013,106.8138542,17/?near=-6.2194013,106.8138542,17');
 
     do {
         await page.evaluate( async () => {
@@ -73,11 +137,15 @@ async function goToNextPage(page) {
     })
     // const dataAddress = await page.$$('.fontHeadlineSmall span')
     ads = ads.concat(await parsePlaces(page))
-    console.log('ads ' + ads.length + ' places');
+    ads = ads.sort((a, b) => a.distance - b.distance).filter((value, index, self) =>
+    index === self.findIndex(obj => obj.name === value.name)
+  );
+    console.log('ada ' + ads.length + ' frenchise');
      await goToNextPage(page)
-    } while (await hasNextPage(page));
-    console.log("done")
-    console.log(ads)
-    // await browser.close();
+    } while (distanceMax(ads));
+    console.log("======= done =====")
+    // console.log(ads.sort((a, b) => a.distance - b.distance))
+    console.log(ads.sort((a, b) => a.distance - b.distance).filter(dt => dt.distance <= maxjarak))
+    await browser.close();
 })();
 

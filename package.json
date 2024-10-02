@@ -18,6 +18,7 @@
     "mongoose": "^6.3.4",
     "node-cron": "^3.0.0",
     "nodemon": "^2.0.16",
-    "puppeteer": "^14.0.0"
+    "puppeteer": "^14.0.0",
+    "request": "^2.88.2"
   }
 }
